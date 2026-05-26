@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '../../../supabaseClient';
 
 export default function TeamPage() {
   const [referralCode, setReferralCode] = useState('');
@@ -37,16 +37,13 @@ export default function TeamPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 text-white flex flex-col items-center justify-center font-sans">
-      <div className="w-full max-w-md p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center shadow-xl">
-        <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/5">
-           <span className="text-3xl text-amber-400">🔗</span>
-        </div>
-        <h2 className="text-2xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">ጓደኞችህን ይጋብዙ</h2>
-        <p className="text-sm text-slate-400 mb-8 leading-relaxed">የግብዣ ሊንክህን ለሰዎች በማጋራት የ 3 ደረጃ ኮሚሽን (10% / 7% / 2%) ያግኙ! አሁኑኑ ያጋሩ።</p>
+      <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+        <h2 className="text-xl font-bold mb-4 text-amber-400">ጓደኞችህን ይጋብዙ</h2>
+        <p className="text-sm text-slate-400 mb-6">የግብዣ ሊንክህን ለሰዎች በማጋራት የ 3 ደረጃ ኮሚሽን (10% / 7% / 2%) ያግኙ!</p>
         
         <button 
           onClick={copyLink}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold transition shadow-md shadow-amber-500/10"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold transition"
         >
           {copied ? 'ኮፒ ሆኗል! ✅' : 'የግብዣ ሊንክ ኮፒ አድርግ'}
         </button>
