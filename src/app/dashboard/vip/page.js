@@ -1,18 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../supabaseClient';
-
-interface VIPLevel {
-  level: number;
-  name: string;
-  price: number;
-  daily_return: number;
-}
+import { supabase } from '../../../../supabaseClient';
 
 export default function VIPPage() {
-  const [vipLevels, setVipLevels] = useState<VIPLevel[]>([]);
-  const [currentVip, setCurrentVip] = useState<number>(0);
+  const [vipLevels, setVipLevels] = useState([]);
+  const [currentVip, setCurrentVip] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
