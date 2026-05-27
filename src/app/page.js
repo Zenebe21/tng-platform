@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // ትክክለኛው የፋይል ስም እዚህ ተስተካክሏል
+import { supabase } from '@/lib/supabase'; // በ Next.js ፍፁም መንገድ (Path Alias) ተስተካክሏል
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,7 +27,6 @@ export default function AuthPage() {
       return;
     }
 
-    // በቀጥታ ወደ እኛ የ tng_members ቴብል ማስገባት
     const { data, error: insertError } = await supabase
       .from('tng_members')
       .insert([
@@ -42,7 +41,7 @@ export default function AuthPage() {
       setError(insertError.message);
     } else {
       setSuccess(isEnglish ? 'Registration successful! Please Log In.' : 'ምዝገባው ተሳክቷል! አሁን መግባት ይችላሉ።');
-      setIsLogin(true); // ወደ መግቢያ ገጽ ይመልሰዋል
+      setIsLogin(true);
     }
   };
 
@@ -61,7 +60,7 @@ export default function AuthPage() {
       setError(isEnglish ? 'Invalid phone number or password!' : 'የስልክ ቁጥር ወይም ይለፍ ቃል ተሳስቷል!');
     } else {
       alert(isEnglish ? 'Login Successful!' : 'በተሳካ ሁኔታ ገብተዋል!');
-      window.location.href = '/dashboard'; // ወደ ዳሽቦርድ ይወስደዋል
+      window.location.href = '/dashboard';
     }
   };
 
@@ -104,7 +103,6 @@ export default function AuthPage() {
           {isEnglish ? 'Reliable and Automated ROI Platform' : 'አስተማማኝ እና አውቶማቲክ የትርፍ ማግኛ መድረክ'}
         </p>
 
-        {/* 1. FORGOT PASSWORD FORM */}
         {isForgotPassword ? (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <h3 className="text-lg text-center font-semibold mb-2">{isEnglish ? 'Reset Password' : 'ይለፍ ቃል ቀይር'}</h3>
@@ -126,7 +124,6 @@ export default function AuthPage() {
             </div>
           </form>
         ) : isLogin ? (
-          /* 2. LOGIN FORM */
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-sm block mb-1">{isEnglish ? 'Phone Number' : 'ስልክ ቁጥር'}</label>
@@ -149,7 +146,6 @@ export default function AuthPage() {
             </div>
           </form>
         ) : (
-          /* 3. SIGN UP FORM */
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
               <label className="text-sm block mb-1">{isEnglish ? 'Phone Number' : 'ስልክ ቁጥር'}</label>
