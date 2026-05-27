@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient'; // ያንተን የsupabaseClient ፋይል ስም ይጠቀማል
+import { supabase } from '../../lib/supabaseClient'; // የፋይል መሄጃው መንገድ በትክክል ተስተካክሏል
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -98,7 +98,7 @@ export default function AuthPage() {
 
       <div className="bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-700">
         <h2 className="text-2xl font-bold text-center text-amber-500 mb-2">
-          {isEnglish ? 'Trust New Generation (TNG)' : 'ትረስት ነው ጄኔሬሽን (TNG)'}
+          Trust New Generation (TNG)
         </h2>
         <p className="text-center text-sm text-slate-400 mb-6">
           {isEnglish ? 'Reliable and Automated ROI Platform' : 'አስተማማኝ እና አውቶማቲክ የትርፍ ማግኛ መድረክ'}
