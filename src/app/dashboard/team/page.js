@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 export default function TeamPage() {
   const [referralCode, setReferralCode] = useState('');
@@ -63,9 +63,15 @@ export default function TeamPage() {
         </h2>
 
         <p className="text-sm text-slate-400 mb-6">
-          የግብዣ ሊንክህን ለሰዎች በማጋራት የ 3 ደረጃ ኮሚሽን
+          የግብዣ ሊንክህን ለሰዎች በማጋራት የ3 ደረጃ ኮሚሽን
           (10% / 7% / 2%) ያግኙ!
         </p>
+
+        {referralCode && (
+          <div className="mb-4 p-3 rounded-xl bg-slate-800 text-sm break-all text-amber-300">
+            {`${typeof window !== 'undefined' ? window.location.origin : ''}/register?ref=${referralCode}`}
+          </div>
+        )}
 
         <button
           onClick={copyLink}
@@ -76,4 +82,4 @@ export default function TeamPage() {
       </div>
     </div>
   );
-    }
+}
