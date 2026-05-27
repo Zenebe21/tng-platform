@@ -1,145 +1,186 @@
+'use strict';
 'use client';
+
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient'; // ያንተን የsupabaseClient ፋይል ስም ይጠቀማል
 
 export default function AuthPage() {
-  const [isAmharic, setIsAmharic] = useState(true);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isEnglish, setIsEnglish] = useState(false);
+  
+  // ፎርም ዳታ
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const text = {
-    en: {
-      title: 'Trust New Generation (TNG)',
-      subtitle: 'Smart ROI & Automated Investment Platform',
-      login: 'Sign In',
-      signup: 'Sign Up',
-      email: 'Email Address',
-      password: 'Password',
-      phone: 'Phone Number (Telebirr/M-Pesa)',
-      ref: 'Referral Code (Optional)',
-      noAccount: "Don't have an account? ",
-      haveAccount: 'Already have an account? ',
-      successReg: 'Registration successful! Please log in.',
-    },
-    am: {
-      title: 'ትረስት ኒው ጄኔሬሽን (TNG)',
-      subtitle: 'አስተማማኝ እና አውቶማቲክ የትርፍ ማግኛ መድረክ',
-      login: 'ግባ (Log In)',
-      signup: 'ተመዝገብ (Sign Up)',
-      email: 'ኢሜይል አድራሻ',
-      password: 'የይለፍ ቃል',
-      phone: 'የስልክ ቁጥር (ቴሌብር/ኤምፒሳ)',
-      ref: 'የሪፈራል ኮድ (ካለዎት)',
-      noAccount: 'አካውንት የለዎትም? ',
-      haveAccount: 'አካውንት አለዎት? ',
-      successReg: 'ምዝገባው ተሳክቷል! አሁን መግባት ይችላሉ።',
+  // ምዝገባ (Sign Up)
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (password !== confirmPassword) {
+      setError(isEnglish ? 'Passwords do not match!' : 'የይለፍ ቃላቱ አይመሳሰሉም!');
+      return;
+    }
+
+    // በቀጥታ ወደ እኛ የ tng_members ቴብል ማስገባት
+    const { data, error: insertError } = await supabase
+      .from('tng_members')
+      .insert([
+        { 
+          phone_number: phone.trim(), 
+          password_hash: password, 
+          referral_code: referralCode || null 
+        }
+      ]);
+
+    if (insertError) {
+      setError(insertError.message);
+    } else {
+      setSuccess(isEnglish ? 'Registration successful! Please Log In.' : 'ምዝገባው ተሳክቷል! አሁን መግባት ይችላሉ።');
+      setIsLogin(true); // ወደ መግቢያ ገጽ ይመልሰዋል
     }
   };
 
-  const t = isAmharic ? text.am : text.en;
-
-  const handleAuth = async (e) => {
+  // መግቢያ (Log In)
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage('');
+    setError('');
 
-    try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { phone, referral_by: referralCode || null }
-          }
-        });
-        if (error) throw error;
-        setMessage(t.successReg);
-        setIsSignUp(false);
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        window.location.href = '/dashboard';
-      }
-    } catch (error) {
-      setMessage(error.message);
-    } finally {
-      setLoading(false);
+    const { data, error: loginError } = await supabase
+      .from('tng_members')
+      .select('*')
+      .eq('phone_number', phone.trim())
+      .single();
+
+    if (loginError || !data || data.password_hash !== password) {
+      setError(isEnglish ? 'Invalid phone number or password!' : 'የስልክ ቁጥር ወይም ይለፍ ቃል ተሳስቷል!');
+    } else {
+      alert(isEnglish ? 'Login Successful!' : 'በተሳካ ሁኔታ ገብተዋል!');
+      window.location.href = '/dashboard'; // ወደ ዳሽቦርድ ይወስደዋል
+    }
+  };
+
+  // ይለፍ ቃል መቀየር (Forgot Password)
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    const { data, error: updateError } = await supabase
+      .from('tng_members')
+      .update({ password_hash: password })
+      .eq('phone_number', phone.trim());
+
+    if (updateError) {
+      setError(updateError.message);
+    } else {
+      alert(isEnglish ? 'Password updated successfully!' : 'የይለፍ ቃልዎ ተቀይሯል!');
+      setIsForgotPassword(false);
+      setIsLogin(true);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-tngDark">
-      {/* የቋንቋ መቀየሪያ ቁልፍ (እዚህ ላይ ተስተካክሏል) */}
-      <button 
-        onClick={() => setIsAmharic(!isAmharic)}
-        className="absolute top-4 right-4 bg-tngCard border border-gray-700 px-4 py-2 rounded-full text-sm font-semibold text-tngGold"
-      >
-        {isAmharic ? 'English' : 'አማርኛ'}
-      </button>
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center relative px-4">
+      {/* 🌐 Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <button 
+          onClick={() => setIsEnglish(!isEnglish)}
+          className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-1 px-3 rounded-full text-sm transition"
+        >
+          {isEnglish ? '🇪🇹 አማርኛ' : '🇬🇧 English'}
+        </button>
+      </div>
 
-      <div className="w-full max-w-md p-8 rounded-2xl tng-glass shadow-2xl text-center z-10">
-        <h1 className="text-3xl font-extrabold text-tngGold mb-2 tracking-wide">{t.title}</h1>
-        <p className="text-gray-400 text-sm mb-8">{t.subtitle}</p>
+      <div className="bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-700">
+        <h2 className="text-2xl font-bold text-center text-amber-500 mb-2">
+          {isEnglish ? 'Trust New Generation (TNG)' : 'ትረስት ነው ጄኔሬሽን (TNG)'}
+        </h2>
+        <p className="text-center text-sm text-slate-400 mb-6">
+          {isEnglish ? 'Reliable and Automated ROI Platform' : 'አስተማማኝ እና አውቶማቲክ የትርፍ ማግኛ መድረክ'}
+        </p>
 
-        {message && (
-          <div className="p-3 mb-4 rounded-lg text-sm bg-blue-900/30 text-blue-300 border border-blue-800">
-            {message}
-          </div>
+        {/* 1. FORGOT PASSWORD FORM */}
+        {isForgotPassword ? (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <h3 className="text-lg text-center font-semibold mb-2">{isEnglish ? 'Reset Password' : 'ይለፍ ቃል ቀይር'}</h3>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Phone Number' : 'ስልክ ቁጥር'}</label>
+              <input type="tel" placeholder="09..." className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'New Password' : 'አዲስ የይለፍ ቃል'}</label>
+              <input type="password" placeholder="******" className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <button type="submit" className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">
+              {isEnglish ? 'Update Password' : 'አድስ'}
+            </button>
+            <div className="text-center mt-4">
+              <button type="button" onClick={() => { setIsForgotPassword(false); setIsLogin(true); }} className="text-sm text-slate-400 hover:underline">
+                {isEnglish ? 'Back to Login' : 'ወደ መግቢያ ተመለስ'}
+              </button>
+            </div>
+          </form>
+        ) : isLogin ? (
+          /* 2. LOGIN FORM */
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Phone Number' : 'ስልክ ቁጥር'}</label>
+              <input type="tel" placeholder="09..." className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Password' : 'የይለፍ ቃል'}</label>
+              <input type="password" placeholder="******" className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <button type="submit" className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">
+              {isEnglish ? 'Log In' : 'ግባ'}
+            </button>
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <button type="button" onClick={() => setIsForgotPassword(true)} className="text-amber-400 hover:underline">
+                {isEnglish ? 'Forgot Password?' : 'የይለፍ ቃል ረስተዋል?'}
+              </button>
+              <button type="button" onClick={() => setIsLogin(false)} className="text-slate-400 hover:underline">
+                {isEnglish ? 'Sign Up' : 'ተመዝገብ (+)'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* 3. SIGN UP FORM */
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Phone Number' : 'ስልክ ቁጥር'}</label>
+              <input type="tel" placeholder="09..." className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Password' : 'የይለፍ ቃል'}</label>
+              <input type="password" placeholder="******" className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Confirm Password' : 'የይለፍ ቃል አረጋግጥ'}</label>
+              <input type="password" placeholder="******" className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-sm block mb-1">{isEnglish ? 'Referral Code (Optional)' : 'የሪፈራል ኮድ (ከተፈለገ)'}</label>
+              <input type="text" placeholder="TNG..." className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 focus:outline-none focus:border-amber-500" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} />
+            </div>
+            <button type="submit" className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition">
+              {isEnglish ? 'Register' : 'ተመዝገብ'}
+            </button>
+            <div className="text-center mt-4">
+              <button type="button" onClick={() => setIsLogin(true)} className="text-sm text-slate-400 hover:underline">
+                {isEnglish ? 'Already have an account? Log In' : 'አካውንት አለዎት? ይግቡ'}
+              </button>
+            </div>
+          </form>
         )}
 
-        <form onSubmit={handleAuth} className="space-y-4 text-left">
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">{t.email}</label>
-            <input 
-              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-xl bg-tngDark border border-gray-700 focus:border-tngGold focus:outline-none text-white"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">{t.password}</label>
-            <input 
-              type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-xl bg-tngDark border border-gray-700 focus:border-tngGold focus:outline-none text-white"
-            />
-          </div>
-
-          {isSignUp && (
-            <>
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">{t.phone}</label>
-                <input 
-                  type="text" required value={phone} onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-tngDark border border-gray-700 focus:border-tngGold focus:outline-none text-white"
-                  placeholder="09..."
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">{t.ref}</label>
-                <input 
-                  type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-tngDark border border-gray-700 focus:border-tngGold focus:outline-none text-white"
-                />
-              </div>
-            </>
-          )}
-
-          <button type="submit" disabled={loading} className="w-full p-4 rounded-xl btn-gold mt-4">
-            {loading ? '...' : (isSignUp ? t.signup : t.login)}
-          </button>
-        </form>
-
-        <p className="text-sm text-gray-400 mt-6">
-          {isSignUp ? t.haveAccount : t.noAccount}
-          <button onClick={() => setIsSignUp(!isSignUp)} className="text-tngGold font-bold hover:underline">
-            {isSignUp ? t.login : t.signup}
-          </button>
-        </p>
+        {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+        {success && <p className="text-green-500 text-sm mt-4 text-center">{success}</p>}
       </div>
     </div>
   );
