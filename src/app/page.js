@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase'; // በ Next.js ፍፁም መንገድ (Path Alias) ተስተካክሏል
+import { supabase } from '../lib/supabase'; // ከ src/lib/supabase.js ፋይል ይወስዳል
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
