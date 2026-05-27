@@ -1,53 +1,32 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../supabaseClient';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../../lib/supabase';
 
 export default function TeamPage() {
-  const [referralCode, setReferralCode] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [teamData, setTeamData] = useState([]);
 
   useEffect(() => {
-    async function getProfile() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('referral_code')
-            .eq('id', user.id)
-            .single();
-          if (data) setReferralCode(data.referral_code);
-        }
-      } catch (err) {
-        console.error(err);
+    const fetchData = async () => {
+      const { data, error } = await supabase.from('team').select('*');
+      if (error) {
+        console.error('Error fetching team data:', error);
+      } else {
+        setTeamData(data);
       }
-    }
-    getProfile();
+    };
+    fetchData();
   }, []);
 
-  const copyLink = () => {
-    if (typeof window !== 'undefined' && referralCode) {
-      const link = `${window.location.origin}/register?ref=${referralCode}`;
-      navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white flex flex-col items-center justify-center">
-      <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 text-center">
-        <h2 className="text-xl font-bold mb-4 text-amber-400">ጓደኞችህን ይጋብዙ</h2>
-        <p className="text-sm text-slate-400 mb-6">የግብዣ ሊንክህን ለሰዎች በማጋራት የ 3 ደረጃ ኮሚሽን (10% / 7% / 2%) ያግኙ!</p>
-        
-        <button 
-          onClick={copyLink}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold transition"
-        >
-          {copied ? 'ኮፒ ሆኗል! ✅' : 'የግብዣ ሊንክ ኮፒ አድርግ'}
-        </button>
-      </div>
+    <div className="p-8 bg-slate-900 min-h-screen text-white">
+      <h1 className="text-2xl font-bold mb-4">የቡድን አባላት (Team)</h1>
+      <ul>
+        {teamData.map((item) => (
+          <li key={item.id} className="p-2 border-b border-slate-700">
+            {item.name}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
