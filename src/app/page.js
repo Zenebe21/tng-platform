@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient'; // የፋይል መሄጃው መንገድ በትክክል ተስተካክሏል
+import { supabase } from '../lib/supabase'; // ትክክለኛው የፋይል ስም እዚህ ተስተካክሏል
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
